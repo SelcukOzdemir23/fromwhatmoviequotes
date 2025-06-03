@@ -3,14 +3,15 @@ import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
+// Read from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyClQbj2EJYDJJPofhduul8hkKeGaBN8Zoo",
-  authDomain: "profit-margin-b40ba.firebaseapp.com",
-  projectId: "profit-margin-b40ba",
-  storageBucket: "profit-margin-b40ba.firebasestorage.app",
-  messagingSenderId: "968995959404",
-  appId: "1:968995959404:web:d2e411666bacaa09e95e49",
-  measurementId: "G-45ZK5WE072"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 let app: FirebaseApp;
