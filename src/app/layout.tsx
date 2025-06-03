@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Quote Flix',
+  title: 'From What Movie Quotes',
   description: 'Guess the movie from the quote!',
 };
 

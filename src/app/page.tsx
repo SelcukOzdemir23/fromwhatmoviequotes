@@ -4,9 +4,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { type Question, shuffleArray } from "@/lib/data"; // shuffleArray is now also in lib/data
+import { type Question, shuffleArray } from "@/lib/data";
 import { Film, RefreshCw, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { VariantProps } from "class-variance-authority";
+import { buttonVariants } from "@/components/ui/button"; // For variant type
+
+type ButtonVariant = VariantProps<typeof buttonVariants>["variant"];
 
 export default function HomePage() {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -87,7 +91,7 @@ export default function HomePage() {
     setShowFeedback(false);
     setScore(0);
     setGameOver(false);
-    fetchAndSetQuestions(); // Reload questions for a new game
+    fetchAndSetQuestions();
   };
 
   if (isLoading) {
@@ -123,16 +127,15 @@ export default function HomePage() {
     );
   }
 
-
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
-      <header className="mb-8 text-center">
+      <header className="mb-10 text-center">
         <div className="flex items-center justify-center space-x-3">
-          <Film className="w-10 h-10 text-accent sm:w-12 sm:h-12" />
-          <h1 className="text-4xl font-bold sm:text-5xl font-headline">Quote Flix</h1>
+          <Film className="w-12 h-12 text-accent sm:w-14 sm:h-14" />
+          <h1 className="text-4xl font-bold sm:text-5xl md:text-6xl font-headline">From What Movie Quotes</h1>
         </div>
         {!gameOver && (
-          <p className="mt-4 text-xl text-foreground/80">Score: {score} {questions.length > 0 ? `/ ${questions.length}` : ''}</p>
+          <p className="mt-5 text-lg font-medium text-muted-foreground">Score: {score} {questions.length > 0 ? `/ ${questions.length}` : ''}</p>
         )}
       </header>
 
@@ -157,26 +160,37 @@ export default function HomePage() {
             <CardTitle className="text-2xl italic leading-relaxed text-center sm:text-3xl text-foreground/90">
               "{currentQuestion.quote}"
             </CardTitle>
-            <CardDescription className="pt-2 text-center text-muted-foreground">
+            <CardDescription className="pt-3 text-center text-muted-foreground">
               Which movie is this quote from?
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             {currentQuestion.options.map((option) => {
-              const isSelected = selectedAnswer === option;
-              const isCorrect = option === currentQuestion.correctAnswer;
-              let buttonStyle = "bg-primary hover:bg-primary/90 text-primary-foreground";
+              const isCurrentSelected = selectedAnswer === option;
+              const isCorrectOption = option === currentQuestion.correctAnswer;
+              
+              let buttonVariant: ButtonVariant = "outline";
+              let customClasses = "transition-all duration-300 ease-in-out transform active:scale-95";
 
               if (showFeedback) {
-                if (isSelected) {
-                  buttonStyle = isAnswerCorrect ? "bg-green-500 hover:bg-green-500/90 text-white" : "bg-red-500 hover:bg-red-500/90 text-white";
-                } else if (isCorrect) {
-                  buttonStyle = "border-2 border-green-500 bg-card hover:bg-green-500/10 text-green-400";
+                if (isCurrentSelected) {
+                  if (isAnswerCorrect) {
+                    buttonVariant = "default"; // Using default for accent background
+                    customClasses = cn(customClasses, "bg-accent hover:bg-accent/90 text-accent-foreground border-2 border-accent-foreground/80");
+                  } else {
+                    buttonVariant = "destructive";
+                    // text-destructive-foreground is handled by the variant
+                  }
+                } else if (isCorrectOption) {
+                  buttonVariant = "outline";
+                  customClasses = cn(customClasses, "border-accent text-accent opacity-90");
                 } else {
-                  buttonStyle = "bg-secondary hover:bg-secondary/80 text-secondary-foreground opacity-70";
+                  buttonVariant = "secondary";
+                  customClasses = cn(customClasses, "opacity-60");
                 }
-              } else if (isSelected) {
-                 buttonStyle = "bg-accent/80 hover:bg-accent/70 text-accent-foreground ring-2 ring-accent";
+              } else if (isCurrentSelected) {
+                 buttonVariant = "default"; // Using default for primary background
+                 customClasses = cn(customClasses, "bg-primary/90 ring-2 ring-accent"); 
               }
 
               return (
@@ -184,8 +198,8 @@ export default function HomePage() {
                   key={option}
                   onClick={() => handleAnswer(option)}
                   disabled={showFeedback}
-                  className={cn("w-full h-auto min-h-[3rem] py-3 text-base justify-start text-left whitespace-normal transition-all duration-300 ease-in-out transform active:scale-95", buttonStyle)}
-                  variant={showFeedback || isSelected ? "default" : "outline"}
+                  className={cn("w-full h-auto min-h-[3.25rem] py-3 text-base justify-start text-left whitespace-normal", customClasses)}
+                  variant={buttonVariant}
                 >
                   {option}
                 </Button>
@@ -193,8 +207,8 @@ export default function HomePage() {
             })}
           </CardContent>
           {showFeedback && (
-            <CardFooter className="flex flex-col items-center pt-4 space-y-4">
-              <p className={`text-xl font-semibold ${isAnswerCorrect ? "text-green-400" : "text-red-400"}`}>
+            <CardFooter className="flex flex-col items-center pt-5 space-y-4">
+              <p className={cn("text-xl font-semibold", isAnswerCorrect ? "text-accent" : "text-destructive")}>
                 {isAnswerCorrect ? "Correct!" : `Incorrect! The movie was ${currentQuestion.movie}.`}
               </p>
               <Button onClick={handleNextQuestion} className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
