@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { gameQuestions, type Question, shuffleArray } from "@/lib/data";
+import { type Question, shuffleArray } from "@/lib/data"; // shuffleArray is now also in lib/data
 import { Film, RefreshCw, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,11 +16,41 @@ export default function HomePage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const [animateKey, setAnimateKey] = useState(0); // For triggering animations
+  const [animateKey, setAnimateKey] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorLoadingQuestions, setErrorLoadingQuestions] = useState<string | null>(null);
+
+  const fetchAndSetQuestions = async () => {
+    setIsLoading(true);
+    setErrorLoadingQuestions(null);
+    try {
+      const response = await fetch('/api/questions');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch questions: ${response.statusText}`);
+      }
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.details || data.error);
+      }
+      if (data.length === 0) {
+        setErrorLoadingQuestions("No questions available. Try again later.");
+        setQuestions([]);
+      } else {
+        setQuestions(shuffleArray(data));
+      }
+    } catch (error: any) {
+      console.error("Fetch error:", error);
+      setErrorLoadingQuestions(error.message || "Could not load questions. Please try again later.");
+      setQuestions([]);
+    } finally {
+      setIsLoading(false);
+      setAnimateKey(prev => prev + 1);
+    }
+  };
 
   useEffect(() => {
-    setQuestions(shuffleArray(gameQuestions));
-    setAnimateKey(prev => prev + 1);
+    fetchAndSetQuestions();
   }, []);
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -50,24 +81,48 @@ export default function HomePage() {
   };
 
   const restartGame = () => {
-    setQuestions(shuffleArray(gameQuestions));
     setCurrentQuestionIndex(0);
     setSelectedAnswer(null);
     setIsAnswerCorrect(null);
     setShowFeedback(false);
     setScore(0);
     setGameOver(false);
-    setAnimateKey(prev => prev + 1);
+    fetchAndSetQuestions(); // Reload questions for a new game
   };
 
-  if (questions.length === 0) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <Sparkles className="w-16 h-16 text-accent animate-pulse" />
-        <p className="mt-4 text-xl">Loading Quotes...</p>
+        <p className="mt-4 text-xl">Loading New Quotes...</p>
       </div>
     );
   }
+
+  if (errorLoadingQuestions) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <Film className="w-16 h-16 text-destructive" />
+        <p className="mt-4 text-xl text-center">{errorLoadingQuestions}</p>
+        <Button onClick={restartGame} className="mt-4 bg-accent hover:bg-accent/90 text-accent-foreground">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+  
+  if (questions.length === 0 && !gameOver) {
+     return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <Film className="w-16 h-16 text-muted-foreground" />
+        <p className="mt-4 text-xl text-center">No questions loaded. Check subtitle files or try again.</p>
+        <Button onClick={restartGame} className="mt-4 bg-accent hover:bg-accent/90 text-accent-foreground">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
@@ -77,7 +132,7 @@ export default function HomePage() {
           <h1 className="text-4xl font-bold sm:text-5xl font-headline">Quote Flix</h1>
         </div>
         {!gameOver && (
-          <p className="mt-4 text-xl text-foreground/80">Score: {score}</p>
+          <p className="mt-4 text-xl text-foreground/80">Score: {score} {questions.length > 0 ? `/ ${questions.length}` : ''}</p>
         )}
       </header>
 
@@ -114,16 +169,15 @@ export default function HomePage() {
 
               if (showFeedback) {
                 if (isSelected) {
-                  buttonStyle = isAnswerCorrect ? "bg-accent hover:bg-accent/90 text-accent-foreground" : "bg-destructive hover:bg-destructive/90 text-destructive-foreground";
+                  buttonStyle = isAnswerCorrect ? "bg-green-500 hover:bg-green-500/90 text-white" : "bg-red-500 hover:bg-red-500/90 text-white";
                 } else if (isCorrect) {
-                  buttonStyle = "border-2 border-accent bg-card hover:bg-accent/10 text-accent";
+                  buttonStyle = "border-2 border-green-500 bg-card hover:bg-green-500/10 text-green-400";
                 } else {
                   buttonStyle = "bg-secondary hover:bg-secondary/80 text-secondary-foreground opacity-70";
                 }
               } else if (isSelected) {
                  buttonStyle = "bg-accent/80 hover:bg-accent/70 text-accent-foreground ring-2 ring-accent";
               }
-
 
               return (
                 <Button
@@ -140,7 +194,7 @@ export default function HomePage() {
           </CardContent>
           {showFeedback && (
             <CardFooter className="flex flex-col items-center pt-4 space-y-4">
-              <p className={`text-xl font-semibold ${isAnswerCorrect ? "text-accent" : "text-destructive"}`}>
+              <p className={`text-xl font-semibold ${isAnswerCorrect ? "text-green-400" : "text-red-400"}`}>
                 {isAnswerCorrect ? "Correct!" : `Incorrect! The movie was ${currentQuestion.movie}.`}
               </p>
               <Button onClick={handleNextQuestion} className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
