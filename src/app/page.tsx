@@ -131,7 +131,7 @@ export default function HomePage() {
     <main className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
       <header className="mb-10 text-center">
         <div className="flex items-center justify-center space-x-3">
-          <Film className="w-12 h-12 text-accent sm:w-14 sm:h-14" />
+          <Film className="w-12 h-12 text-accent sm:w-14 sm:h-14 md:w-16 md:h-16" />
           <h1 className="text-4xl font-bold sm:text-5xl md:text-6xl font-headline">From What Movie Quotes</h1>
         </div>
         {!gameOver && (
@@ -157,7 +157,7 @@ export default function HomePage() {
       ) : currentQuestion && (
         <Card key={animateKey} className="w-full max-w-xl shadow-xl animate-in fade-in-0 zoom-in-95 duration-500 bg-card">
           <CardHeader>
-            <CardTitle className="text-2xl italic leading-relaxed text-center sm:text-3xl text-foreground/90">
+            <CardTitle className="text-2xl italic leading-relaxed text-center sm:text-3xl md:text-3xl text-foreground/90">
               "{currentQuestion.quote}"
             </CardTitle>
             <CardDescription className="pt-3 text-center text-muted-foreground">
@@ -175,11 +175,10 @@ export default function HomePage() {
               if (showFeedback) {
                 if (isCurrentSelected) {
                   if (isAnswerCorrect) {
-                    buttonVariant = "default"; // Using default for accent background
+                    buttonVariant = "default"; 
                     customClasses = cn(customClasses, "bg-accent hover:bg-accent/90 text-accent-foreground border-2 border-accent-foreground/80");
                   } else {
                     buttonVariant = "destructive";
-                    // text-destructive-foreground is handled by the variant
                   }
                 } else if (isCorrectOption) {
                   buttonVariant = "outline";
@@ -189,7 +188,7 @@ export default function HomePage() {
                   customClasses = cn(customClasses, "opacity-60");
                 }
               } else if (isCurrentSelected) {
-                 buttonVariant = "default"; // Using default for primary background
+                 buttonVariant = "default"; 
                  customClasses = cn(customClasses, "bg-primary/90 ring-2 ring-accent"); 
               }
 
